@@ -1,0 +1,74 @@
+version: '3'
+
+services:
+  db:
+    container_name: mongo
+    hostname: mongo
+    image: mongo:latest
+    restart: always
+    ports:
+      - 27017:27017
+    networks:
+      - webnetwork
+
+  redis:
+    image: redis:6.2-alpine
+    restart: always
+    container_name: redis
+    hostname: redis
+    ports:
+      - '6379:6379'
+    networks:
+      - webnetwork
+
+  gateway:
+    hostname: gateway
+    container_name: gateway
+    restart: always
+    env_file: .env
+    build:
+      context: .
+      dockerfile: ./apps/gateway/Dockerfile
+    command: npm run start:dev gateway
+    volumes:
+      - .:/app
+    ports:
+      - '8080:8080'
+    networks:
+      - webnetwork
+
+  auth:
+    hostname: auth
+    container_name: auth
+    restart: always
+    env_file: .env
+    build:
+      context: .
+      dockerfile: ./apps/auth/Dockerfile
+    command: npm run start:dev auth
+    volumes:
+      - .:/app
+    ports:
+      - '5000:5000'
+    networks:
+      - webnetwork
+
+  users:
+    hostname: users
+    container_name: users
+    restart: always
+    env_file: .env
+    build:
+      context: .
+      dockerfile: ./apps/users/Dockerfile
+    command: npm run start:dev users
+    volumes:
+      - .:/app
+    ports:
+      - '5001:5001'
+    networks:
+      - webnetwork
+
+networks:
+  webnetwork:
+    driver: bridge
