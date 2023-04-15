@@ -8,9 +8,9 @@ export const KAFKA = {
     AUTH: 'auth',
   },
   TOPICS: {
-    users: {
-      getUsers: 'users.get-users',
-      createUser: 'users.create-user',
+    USERS: {
+      GET_USERS: 'users.get-users',
+      CREATE_USER: 'users.create-user',
     },
   },
-};
+} as const;

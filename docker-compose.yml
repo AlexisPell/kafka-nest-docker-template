@@ -2,13 +2,30 @@ version: '3'
 name: mcrsrvcs-app
 
 services:
-  db:
+  mongo:
     container_name: mongo
     hostname: mongo
     image: mongo:latest
     restart: always
     ports:
       - 27017:27017
+    networks:
+      - webnetwork
+
+  postgres:
+    container_name: postgres
+    hostname: postgres
+    image: postgres
+    restart: always
+    ports:
+      # just 5432 is already specified locally :)
+      - 5435:5432
+    env_file:
+      - .env
+    environment:
+      PG_DATA: /var/lib/postgresql/data
+    volumes:
+      - mcrsrvcs-app-pgdata:/var/lib/postgresql/data
     networks:
       - webnetwork
 
@@ -63,6 +80,8 @@ services:
       context: .
       dockerfile: ./apps/users/Dockerfile
     command: npm run start:dev users
+    depends_on:
+      - postgres
     volumes:
       - .:/app
     ports:
@@ -73,3 +92,6 @@ services:
 networks:
   webnetwork:
     driver: bridge
+
+volumes:
+  mcrsrvcs-app-pgdata:

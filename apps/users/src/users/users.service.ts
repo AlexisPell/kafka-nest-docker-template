@@ -12,7 +12,9 @@ export class UsersService {
   ];
 
   createUser(userDto: CreateUserDto) {
-    return { ...userDto, id: Math.random() * 10000 };
+    const user = { ...userDto, id: Math.random() * 10000 };
+    this.users.push(user);
+    return user;
   }
 
   getUsers() {
