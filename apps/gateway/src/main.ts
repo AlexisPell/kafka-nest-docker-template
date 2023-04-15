@@ -7,23 +7,6 @@ import { KAFKA } from 'libs/common/constants/kafka';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
-  // app.connectMicroservice({
-  //   transport: Transport.KAFKA,
-  //   logger: new Logger(),
-  //   options: {
-  //     client: {
-  //       brokers: [process.env.KAFKA_CLIENT_BROKER],
-  //       clientId: KAFKA.CLIENT_IDS.USERS,
-  //     },
-  //     consumer: {
-  //       groupId: KAFKA.CONSUMERS.USERS,
-  //     },
-  //     subscribe: {
-  //       fromBeginning: true,
-  //     },
-  //   },
-  // });
-  // app.startAllMicroservices();
   await app.listen(process.env.API_GATEWAY_PORT);
 }
 bootstrap();

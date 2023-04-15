@@ -18,9 +18,9 @@ async function bootstrap() {
         consumer: {
           groupId: KAFKA.CONSUMERS.USERS,
         },
-        subscribe: {
-          fromBeginning: true,
-        },
+        // subscribe: {
+        //   fromBeginning: true,
+        // },
       },
     },
   );
