@@ -5,6 +5,7 @@ import { PostgresModule } from 'libs/modules/postgres/postgres.module';
 import { UserModel } from 'libs/modules/users/models/user.model';
 import { ConfigModule } from 'libs/modules/config/config.module';
 import { ConfigService } from 'libs/modules/config/config.service';
+import { SequelizeModule } from '@nestjs/sequelize';
 
 const pgConfig = new ConfigService().config.POSTGRES;
 
@@ -20,7 +21,7 @@ const pgConfig = new ConfigService().config.POSTGRES;
       synchronize: true,
       models: [UserModel],
     }),
-    ConfigModule,
+    SequelizeModule.forFeature([UserModel]),
   ],
   controllers: [UsersController],
   providers: [UsersService],

@@ -1,23 +1,37 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { RpcException } from '@nestjs/microservices';
+import { InjectModel } from '@nestjs/sequelize';
 import { CreateUserDto } from 'libs/modules/users/dto/create-user.dto';
+import {
+  UserAttributes,
+  UserModel,
+} from 'libs/modules/users/models/user.model';
 
 @Injectable()
 export class UsersService {
-  users: any[] = [
-    {
-      email: 'test@example.com',
-      password: '123456',
-      id: 12353423,
-    },
-  ];
+  constructor(@InjectModel(UserModel) private userModel: typeof UserModel) {}
 
-  createUser(userDto: CreateUserDto) {
-    const user = { ...userDto, id: Math.random() * 10000 };
-    this.users.push(user);
-    return user;
+  async getUserByEmail(email: string): Promise<UserAttributes> {
+    try {
+      const user = await this.userModel.findOne({
+        where: { email },
+      });
+      if (!user)
+        throw new RpcException(new BadRequestException('User is not found'));
+      return user.dataValues;
+    } catch (error) {
+      throw new RpcException(new BadRequestException('Querying user failed'));
+    }
   }
 
-  getUsers() {
-    return this.users;
+  async createUser(userDto: CreateUserDto): Promise<UserAttributes> {
+    const userExists = await this.userModel.findOne({
+      where: { email: userDto.email },
+    });
+    if (userExists) throw new BadRequestException('User already exists');
+
+    const { dataValues: user } = await this.userModel.create(userDto);
+
+    return user;
   }
 }

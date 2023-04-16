@@ -2,7 +2,7 @@ import { Column, DataType, Model, Table } from 'sequelize-typescript';
 import { Optional } from 'sequelize';
 import { ApiProperty } from '@nestjs/swagger';
 
-export interface UserAttributes {
+export class UserAttributes {
   id: number;
   email: string;
   password: string;

@@ -29,17 +29,13 @@ using Kafka+ConductorUI for messaging communication
 ## Installation and running app
 
 <h3>Start kafka server firstly.</h3>
-<h5>Exposes Conductor UI on localhost:8000</h5>
-```bash
+<h5>Exposes Conductor UI on localhost:8080</h5>
 $ docker-compose -f ./kafka/full-stack.yml up
-```
 
 <h3>Set .env/KAFKA_CLIENT_BROKER to localhost:9092 (on linux) or to host.docker.internal:29092 (on windows or mac)</h3>
 
 <h3>Start rest of the services</h3>
-```bash
 $ docker-compose up
-```
 
 ## Test
 

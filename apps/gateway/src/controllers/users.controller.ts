@@ -1,17 +1,26 @@
 import {
+  BadGatewayException,
   Body,
   Controller,
   Get,
   Injectable,
   Logger,
   OnModuleInit,
+  Param,
   Post,
+  Query,
 } from '@nestjs/common';
-import { Client, ClientKafka, Transport } from '@nestjs/microservices';
+import { catchError, firstValueFrom, throwError } from 'rxjs';
+import {
+  Client,
+  ClientKafka,
+  RpcException,
+  Transport,
+} from '@nestjs/microservices';
 import { instanceToPlain } from 'class-transformer';
 import { KAFKA } from 'libs/common/constants/kafka';
-import { ConfigService } from 'libs/modules/config/config.service';
 import { CreateUserDto } from 'libs/modules/users/dto/create-user.dto';
+import { UserAttributes } from 'libs/modules/users/models/user.model';
 
 @Injectable()
 @Controller('users')
@@ -33,15 +42,20 @@ export class UsersController implements OnModuleInit {
   client: ClientKafka;
 
   async onModuleInit() {
-    this.client.subscribeToResponseOf(KAFKA.TOPICS.USERS.GET_USERS);
+    this.client.subscribeToResponseOf(KAFKA.TOPICS.USERS.GET_USER_BY_EMAIL);
     this.client.subscribeToResponseOf(KAFKA.TOPICS.USERS.CREATE_USER);
     await this.client.connect();
   }
 
   @Get()
-  async getUsers(): Promise<any> {
-    this.logger.debug('Get users endpoint');
-    return this.client.send(KAFKA.TOPICS.USERS.GET_USERS, '');
+  async getUserByEmail(@Query('email') email: string): Promise<UserAttributes> {
+    this.logger.debug('Get user by email endpoint. email: ', email);
+    const response = await this.client
+      .send<UserAttributes>(KAFKA.TOPICS.USERS.GET_USER_BY_EMAIL, email)
+      .pipe(
+        catchError((err) => throwError(() => new RpcException(err.response))),
+      );
+    return firstValueFrom(response);
   }
 
   @Post()

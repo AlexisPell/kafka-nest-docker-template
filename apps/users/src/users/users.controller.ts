@@ -1,31 +1,27 @@
 import { MessagePattern, Payload } from '@nestjs/microservices';
-import { Controller } from '@nestjs/common';
-
-import { IKafkaMessage } from 'libs/common/interfaces/kafka';
+import { Controller, Logger, UseFilters } from '@nestjs/common';
 
 import { UsersService } from './users.service';
 import { CreateUserDto } from 'libs/modules/users/dto/create-user.dto';
 import { KAFKA } from 'libs/common/constants/kafka';
-import { ConfigService } from 'libs/modules/config/config.service';
+import { ExceptionFilter } from './rpc-exception.filter';
 
 @Controller()
 export class UsersController {
-  constructor(
-    private readonly usersService: UsersService,
-    private readonly configService: ConfigService,
-  ) {}
+  logger: Logger = new Logger(UsersController.name);
 
-  @MessagePattern(KAFKA.TOPICS.USERS.GET_USERS)
-  getUsers(@Payload() message: IKafkaMessage<string>) {
-    console.log('CONSUMER GET USERS: ', message);
-    console.log('CONFIG:', JSON.stringify(this.configService.getConfig()));
+  constructor(private readonly usersService: UsersService) {}
 
-    return this.usersService.getUsers();
+  @MessagePattern(KAFKA.TOPICS.USERS.GET_USER_BY_EMAIL)
+  @UseFilters(new ExceptionFilter())
+  getUserByEmail(@Payload() message: string) {
+    this.logger.debug('Consumer server: get user by email:', message);
+    return this.usersService.getUserByEmail(message);
   }
 
   @MessagePattern(KAFKA.TOPICS.USERS.CREATE_USER)
   createUser(@Payload() message: CreateUserDto) {
-    console.log('CONSUMER CREATE USER: ', message);
-    return this.usersService.createUser(message);
+    this.logger.debug('Consumer server: create user. dto:', message);
+    // return this.usersService.createUser(message);
   }
 }

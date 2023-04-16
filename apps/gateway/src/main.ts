@@ -2,12 +2,14 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import { RpcExceptionFilter } from './filters/global-rpc.exception';
 
 async function bootstrap() {
   try {
     const app = await NestFactory.create(AppModule);
 
     app.enableCors();
+    app.setGlobalPrefix('api/v1');
     app.useGlobalPipes(
       new ValidationPipe({
         transform: true,
@@ -24,13 +26,13 @@ async function bootstrap() {
         exposeUnsetFields: false,
       }),
     );
+    app.useGlobalFilters(new RpcExceptionFilter());
 
     const options = new DocumentBuilder()
       .setTitle('Klaim api')
       .setVersion('1.0.0')
       .addBearerAuth()
       .build();
-
     const document = SwaggerModule.createDocument(app, options);
     SwaggerModule.setup('swagger', app, document);
 
