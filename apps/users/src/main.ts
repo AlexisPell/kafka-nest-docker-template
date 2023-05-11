@@ -1,7 +1,7 @@
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { NestFactory } from '@nestjs/core';
 import { UsersModule } from './users/users.module';
-import { KAFKA } from 'libs/common/constants/kafka';
+import { KAFKA } from 'libs/common/kafka/kafka.constants';
 
 async function bootstrap() {
   const app = await NestFactory.createMicroservice<MicroserviceOptions>(

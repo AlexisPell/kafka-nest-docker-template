@@ -7,30 +7,20 @@ import {
   OnModuleInit,
   Post,
 } from '@nestjs/common';
-import { Client, ClientKafka, Transport } from '@nestjs/microservices';
+import { Client, ClientKafka, RpcException } from '@nestjs/microservices';
 import { instanceToPlain } from 'class-transformer';
-import { KAFKA } from 'libs/common/constants/kafka';
+import { CLIENT_OPTIONS } from 'libs/common/kafka/client-options';
+import { KAFKA } from 'libs/common/kafka/kafka.constants';
 import { SignInDto } from 'libs/modules/auth/dto/sign-in.dto';
 import { SignUpDto } from 'libs/modules/auth/dto/sign-up.dto';
-import { CreateUserDto } from 'libs/modules/users/dto/create-user.dto';
+import { catchError, firstValueFrom, throwError } from 'rxjs';
 
 @Injectable()
 @Controller()
 export class AuthController implements OnModuleInit {
   logger: Logger = new Logger(AuthController.name);
 
-  @Client({
-    transport: Transport.KAFKA,
-    options: {
-      client: {
-        brokers: [process.env.KAFKA_CLIENT_BROKER],
-        clientId: KAFKA.CLIENT_IDS.AUTH,
-      },
-      consumer: {
-        groupId: KAFKA.CONSUMERS.AUTH,
-      },
-    },
-  })
+  @Client(CLIENT_OPTIONS.AUTH_CLIENT_OPTIONS('gateway-auth-controller'))
   client: ClientKafka;
 
   async onModuleInit() {
@@ -43,16 +33,29 @@ export class AuthController implements OnModuleInit {
 
   @Post('local/signup')
   async signUpLocal(@Body() signUpDto: SignUpDto): Promise<any> {
-    this.logger.debug('local signup endpoint');
-    return this.client.send(
-      KAFKA.TOPICS.AUTH.SIGN_UP,
+    this.logger.debug(
+      'POST /local/signup. signUpDto:',
       instanceToPlain(signUpDto),
     );
+    const response = await firstValueFrom(
+      this.client
+        .send(KAFKA.TOPICS.AUTH.SIGN_UP, instanceToPlain(signUpDto))
+        .pipe(
+          catchError((err) => {
+            console.log('CONTROLLER ERROR:', err);
+            return throwError(() => new RpcException(err.response));
+          }),
+        ),
+    );
+    return response;
   }
 
   @Post('local/signin')
   async signInLocal(@Body() signInDto: SignInDto): Promise<any> {
-    this.logger.debug('local signin endpoint');
+    this.logger.debug(
+      'POST /local/signin. signInDto:',
+      instanceToPlain(signInDto),
+    );
     return this.client.send(
       KAFKA.TOPICS.AUTH.SIGN_IN,
       instanceToPlain(signInDto),
@@ -61,13 +64,13 @@ export class AuthController implements OnModuleInit {
 
   @Post('refresh')
   async refreshToken(): Promise<any> {
-    this.logger.debug('refresh token endpoint');
+    this.logger.debug('POST /refresh');
     return this.client.send(KAFKA.TOPICS.AUTH.REFRESH_TOKEN, '');
   }
 
   @Post('logout')
   async logout(): Promise<any> {
-    this.logger.debug('logout endpoint');
+    this.logger.debug('POST /logout');
     return this.client.send(KAFKA.TOPICS.AUTH.LOGOUT, '');
   }
 }

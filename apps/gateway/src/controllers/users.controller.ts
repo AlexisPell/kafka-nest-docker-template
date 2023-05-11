@@ -18,27 +18,17 @@ import {
   Transport,
 } from '@nestjs/microservices';
 import { instanceToPlain } from 'class-transformer';
-import { KAFKA } from 'libs/common/constants/kafka';
+import { KAFKA } from 'libs/common/kafka/kafka.constants';
 import { CreateUserDto } from 'libs/modules/users/dto/create-user.dto';
 import { UserAttributes } from 'libs/modules/users/models/user.model';
+import { CLIENT_OPTIONS } from 'libs/common/kafka/client-options';
 
 @Injectable()
 @Controller('users')
 export class UsersController implements OnModuleInit {
   logger: Logger = new Logger(UsersController.name);
 
-  @Client({
-    transport: Transport.KAFKA,
-    options: {
-      client: {
-        brokers: [process.env.KAFKA_CLIENT_BROKER],
-        clientId: KAFKA.CLIENT_IDS.USERS,
-      },
-      consumer: {
-        groupId: KAFKA.CONSUMERS.USERS,
-      },
-    },
-  })
+  @Client(CLIENT_OPTIONS.USERS_CLIENT_OPTIONS('gateway-users-controller'))
   client: ClientKafka;
 
   async onModuleInit() {
@@ -49,18 +39,21 @@ export class UsersController implements OnModuleInit {
 
   @Get()
   async getUserByEmail(@Query('email') email: string): Promise<UserAttributes> {
-    this.logger.debug('Get user by email endpoint. email: ', email);
-    const response = await this.client
-      .send<UserAttributes>(KAFKA.TOPICS.USERS.GET_USER_BY_EMAIL, email)
-      .pipe(
-        catchError((err) => throwError(() => new RpcException(err.response))),
-      );
-    return firstValueFrom(response);
+    this.logger.debug('GET / query email:', email);
+    const user = await firstValueFrom(
+      this.client
+        .send<UserAttributes>(KAFKA.TOPICS.USERS.GET_USER_BY_EMAIL, email)
+        .pipe(
+          catchError((err) => throwError(() => new RpcException(err.response))),
+        ),
+    );
+    this.logger.debug('User received: ', user);
+    return user;
   }
 
   @Post()
   async createUser(@Body() createUserDto: CreateUserDto): Promise<any> {
-    this.logger.debug('Create user endpoint', instanceToPlain(createUserDto));
+    this.logger.debug('POST / createUserDto:', instanceToPlain(createUserDto));
     return this.client.send(
       KAFKA.TOPICS.USERS.CREATE_USER,
       instanceToPlain(createUserDto),

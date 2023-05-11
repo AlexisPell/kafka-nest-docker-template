@@ -1,3 +1,4 @@
+// UNUSED FOR NOW
 export interface IKafkaMessage<T> {
   key: Buffer | null;
   value: T;
