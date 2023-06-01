@@ -1,3 +1,0 @@
-[submodule "kafka"]
-	path = kafka
-	url = https://github.com/conduktor/kafka-stack-docker-compose
