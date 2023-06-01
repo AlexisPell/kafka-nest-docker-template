@@ -29,7 +29,7 @@ async function bootstrap() {
     app.useGlobalFilters(new RpcExceptionFilter());
 
     const options = new DocumentBuilder()
-      .setTitle('Klaim api')
+      .setTitle('MyApp api')
       .setVersion('1.0.0')
       .addBearerAuth()
       .build();
