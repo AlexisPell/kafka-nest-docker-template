@@ -22,9 +22,11 @@ import { KAFKA } from 'libs/common/kafka/kafka.constants';
 import { CreateUserDto } from 'libs/modules/users/dto/create-user.dto';
 import { UserAttributes } from 'libs/modules/users/models/user.model';
 import { CLIENT_OPTIONS } from 'libs/common/kafka/client-options';
+import { ApiTags } from '@nestjs/swagger';
 
 @Injectable()
-@Controller('users')
+@ApiTags('User')
+@Controller('user')
 export class UsersController implements OnModuleInit {
   logger: Logger = new Logger(UsersController.name);
 
@@ -54,9 +56,13 @@ export class UsersController implements OnModuleInit {
   @Post()
   async createUser(@Body() createUserDto: CreateUserDto): Promise<any> {
     this.logger.debug('POST / createUserDto:', instanceToPlain(createUserDto));
-    return this.client.send(
-      KAFKA.TOPICS.USERS.CREATE_USER,
-      instanceToPlain(createUserDto),
+    const user = await firstValueFrom(
+      this.client
+        .send(KAFKA.TOPICS.USERS.CREATE_USER, instanceToPlain(createUserDto))
+        .pipe(
+          catchError((err) => throwError(() => new RpcException(err.response))),
+        ),
     );
+    this.logger.debug('User created: ', user);
   }
 }

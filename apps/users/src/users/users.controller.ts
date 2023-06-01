@@ -13,7 +13,6 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @MessagePattern(KAFKA.TOPICS.USERS.GET_USER_BY_EMAIL)
-  // @UseFilters(new ExceptionFilter())
   getUserByEmail(@Payload() message: string) {
     this.logger.debug('Controller: getUserByEmail', message);
     return this.usersService.getUserByEmail(message);

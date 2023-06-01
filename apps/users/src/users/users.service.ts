@@ -51,9 +51,13 @@ export class UsersService {
 
       const { dataValues: user } = await this.userModel.create(userDto);
 
+      this.logger.debug('User created: ', user);
       return user;
     } catch (error) {
-      throw new RpcException(new BadRequestException('Creating user failed'));
+      this.logger.error('Service: createUser error: ', error);
+      throw new RpcException(
+        new BadRequestException('Creating user failed', error),
+      );
     }
   }
 }
